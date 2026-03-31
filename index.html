@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>벤치마킹 보드</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Pretendard:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080808;
+  --s1: #111;
+  --s2: #181818;
+  --s3: #222;
+  --border: #2a2a2a;
+  --border2: #333;
+  --text: #efefef;
+  --muted: #666;
+  --muted2: #888;
+  --insta: #E1306C;
+  --insta2: #F77737;
+  --yt: #FF0000;
+  --yt2: #FF6B6B;
+  --r: 14px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Pretendard',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 28px;
+  border-bottom:1px solid var(--border);
+  position:sticky;top:0;z-index:50;
+  background:rgba(8,8,8,.92);backdrop-filter:blur(16px);
+}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:4px;color:var(--text);}
+.logo span{background:linear-gradient(90deg,var(--insta),var(--insta2),var(--yt));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+.platform-tabs{display:flex;gap:8px;padding:20px 28px 0;}
+.ptab{
+  display:flex;align-items:center;gap:8px;
+  padding:12px 22px;border-radius:10px 10px 0 0;
+  border:1px solid var(--border);border-bottom:none;
+  font-size:14px;font-weight:600;cursor:pointer;
+  background:var(--s1);color:var(--muted);
+  transition:all .2s;
+}
+.ptab.insta.active{background:#1a0810;color:var(--insta);border-color:var(--insta);}
+.ptab.yt.active{background:#1a0000;color:var(--yt);border-color:var(--yt);}
+.ptab:not(.active):hover{color:var(--muted2);background:var(--s2);}
+
+.platform-panel{display:none;border-top:1px solid var(--border);min-height:calc(100vh - 130px);}
+.platform-panel.active{display:block;}
+
+.page{display:none;}
+.page.active{display:block;}
+
+.channel-list-page,.video-list-page,.video-detail-page{padding:28px;}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.page-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--muted2);}
+
+.channel-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;}
+.channel-card{
+  background:var(--s1);border:1px solid var(--border);border-radius:var(--r);
+  padding:20px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden;
+}
+.channel-card:hover{border-color:var(--border2);transform:translateY(-2px);}
+.ch-avatar{
+  width:52px;height:52px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;margin-bottom:14px;
+}
+.insta .ch-avatar{background:linear-gradient(135deg,#405DE6,#E1306C,#F77737);}
+.yt .ch-avatar{background:linear-gradient(135deg,#FF0000,#FF6B6B);}
+.ch-name{font-size:16px;font-weight:700;margin-bottom:4px;}
+.ch-handle{font-size:12px;color:var(--muted);margin-bottom:12px;}
+.ch-count{display:inline-flex;align-items:center;gap:4px;font-size:12px;color:var(--muted2);background:var(--s3);padding:4px 10px;border-radius:20px;}
+.ch-del{
+  position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;
+  background:var(--s3);border:none;color:var(--muted);font-size:12px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;
+}
+.channel-card:hover .ch-del{opacity:1;}
+
+.breadcrumb{display:flex;align-items:center;gap:8px;margin-bottom:20px;font-size:13px;color:var(--muted);}
+.breadcrumb .crumb{cursor:pointer;}
+.breadcrumb .crumb:hover{color:var(--text);}
+.breadcrumb .sep{color:var(--border2);}
+.breadcrumb .current{color:var(--text);font-weight:600;}
+
+.video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;}
+.video-card{
+  background:var(--s1);border:1px solid var(--border);border-radius:var(--r);
+  overflow:hidden;cursor:pointer;transition:all .2s;position:relative;
+}
+.video-card:hover{transform:translateY(-3px);border-color:var(--border2);}
+.video-thumb{width:100%;aspect-ratio:9/16;object-fit:cover;background:var(--s3);display:block;}
+.video-thumb-ph{width:100%;aspect-ratio:9/16;background:var(--s3);display:flex;align-items:center;justify-content:center;font-size:32px;color:var(--border2);}
+.yt-panel .video-thumb,.yt-panel .video-thumb-ph{aspect-ratio:16/9;}
+.video-card-body{padding:12px;}
+.video-num{font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px;letter-spacing:.5px;}
+.video-title{font-size:13px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+.video-del{
+  position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;
+  background:rgba(0,0,0,.75);border:none;color:#aaa;font-size:12px;cursor:pointer;
+  opacity:0;transition:opacity .2s;display:flex;align-items:center;justify-content:center;
+}
+.video-card:hover .video-del{opacity:1;}
+
+.detail-layout{display:grid;grid-template-columns:1fr 1.2fr;gap:24px;align-items:start;}
+.detail-left img{width:100%;border-radius:10px;display:block;}
+.thumb-ph{
+  width:100%;border-radius:10px;background:var(--s3);
+  display:flex;align-items:center;justify-content:center;font-size:48px;
+}
+.insta-panel .thumb-ph{aspect-ratio:9/16;}
+.yt-panel .thumb-ph{aspect-ratio:16/9;}
+
+.dtabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:0;flex-wrap:wrap;}
+.dtab{
+  padding:11px 16px;font-size:13px;font-weight:500;cursor:pointer;
+  border-bottom:2px solid transparent;color:var(--muted);transition:all .2s;
+}
+.insta-panel .dtab.active{color:var(--insta);border-bottom-color:var(--insta);}
+.yt-panel .dtab.active{color:var(--yt);border-bottom-color:var(--yt);}
+
+.dpanel{display:none;padding:20px 0;}
+.dpanel.active{display:block;}
+.dpanel label{display:block;font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+.dpanel textarea,.dpanel input[type=text]{
+  width:100%;background:var(--s2);border:1px solid var(--border);
+  color:var(--text);padding:12px 14px;border-radius:8px;
+  font-size:13px;font-family:'Pretendard',sans-serif;
+  outline:none;resize:vertical;line-height:1.7;transition:border-color .2s;
+}
+.dpanel textarea:focus,.dpanel input[type=text]:focus{border-color:var(--border2);}
+.dpanel textarea{min-height:160px;}
+.dpanel a{color:var(--insta2);word-break:break-all;font-size:13px;}
+.yt-panel .dpanel a{color:var(--yt2);}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'Pretendard',sans-serif;transition:all .2s;}
+.btn-insta{background:var(--insta);color:#fff;}
+.btn-insta:hover{opacity:.85;}
+.btn-yt{background:var(--yt);color:#fff;}
+.btn-yt:hover{opacity:.85;}
+.btn-ghost{background:var(--s2);border:1px solid var(--border);color:var(--muted2);}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2);}
+.btn-save{background:var(--s3);border:1px solid var(--border2);color:var(--text);}
+.btn-save:hover{border-color:var(--muted);}
+.detail-actions{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;}
+
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;align-items:center;justify-content:center;padding:20px;}
+.overlay.open{display:flex;}
+.modal{background:var(--s1);border:1px solid var(--border);border-radius:16px;width:100%;max-width:480px;animation:pop .2s ease;}
+@keyframes pop{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--border);}
+.modal-head h3{font-size:16px;font-weight:700;}
+.modal-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;}
+.modal-body{padding:22px;display:flex;flex-direction:column;gap:14px;}
+.modal-body label{font-size:12px;font-weight:600;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:5px;}
+.modal-body input[type=text]{
+  width:100%;background:var(--s2);border:1px solid var(--border);
+  color:var(--text);padding:10px 14px;border-radius:8px;
+  font-size:14px;font-family:'Pretendard',sans-serif;outline:none;transition:border-color .2s;
+}
+.modal-body input[type=text]:focus{border-color:var(--border2);}
+.modal-foot{padding:16px 22px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end;}
+
+.thumb-drop{border:2px dashed var(--border);border-radius:8px;padding:20px;text-align:center;cursor:pointer;position:relative;transition:border-color .2s;color:var(--muted);font-size:13px;}
+.thumb-drop:hover{border-color:var(--border2);}
+.thumb-drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+
+.empty{grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--muted);}
+.empty .ico{font-size:40px;margin-bottom:12px;}
+.empty p{font-size:14px;margin-bottom:18px;}
+
+::-webkit-scrollbar{width:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--s3);border-radius:3px;}
+
+@media(max-width:700px){
+  .detail-layout{grid-template-columns:1fr;}
+  header,.channel-list-page,.video-list-page,.video-detail-page{padding:16px;}
+  .platform-tabs{padding:14px 16px 0;}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">BENCH<span>MARK</span></div>
+</header>
+
+<div class="platform-tabs">
+  <div class="ptab insta active" onclick="switchPlatform('insta')"><span>📸</span> 인스타그램</div>
+  <div class="ptab yt" onclick="switchPlatform('yt')"><span>▶️</span> 유튜브</div>
+</div>
+
+<!-- ═══ INSTAGRAM ═══════════════════════════════ -->
+<div class="platform-panel insta-panel active" id="insta-panel">
+
+  <div class="page active" id="insta-channels">
+    <div class="channel-list-page insta">
+      <div class="page-header">
+        <div class="page-title">인스타 계정</div>
+        <button class="btn btn-insta" onclick="openAddChannel('insta')">+ 계정 추가</button>
+      </div>
+      <div class="channel-grid" id="insta-channel-grid"></div>
+    </div>
+  </div>
+
+  <div class="page" id="insta-videos">
+    <div class="video-list-page insta">
+      <div class="breadcrumb">
+        <span class="crumb" onclick="goChannels('insta')">인스타그램</span>
+        <span class="sep">›</span>
+        <span class="current" id="insta-channel-name"></span>
+      </div>
+      <div class="page-header">
+        <div class="page-title" id="insta-videos-title"></div>
+        <button class="btn btn-insta" onclick="openAddVideo('insta')">+ 영상 추가</button>
+      </div>
+      <div class="video-grid" id="insta-video-grid"></div>
+    </div>
+  </div>
+
+  <div class="page" id="insta-detail">
+    <div class="video-detail-page insta-panel">
+      <div class="breadcrumb">
+        <span class="crumb" onclick="goChannels('insta')">인스타그램</span>
+        <span class="sep">›</span>
+        <span class="crumb" id="insta-detail-ch-crumb" onclick="goVideos('insta')"></span>
+        <span class="sep">›</span>
+        <span class="current" id="insta-detail-num"></span>
+      </div>
+      <div class="detail-layout">
+        <div class="detail-left" id="insta-detail-left"></div>
+        <div class="detail-right">
+          <div class="dtabs">
+            <div class="dtab active" onclick="switchDtab('insta','body')">📝 본문</div>
+            <div class="dtab" onclick="switchDtab('insta','video')">🎬 원본</div>
+            <div class="dtab" onclick="switchDtab('insta','script')">📄 스크립트</div>
+            <div class="dtab" onclick="switchDtab('insta','memo')">💡 메모</div>
+          </div>
+          <div class="dpanel active" id="insta-dp-body">
+            <label>본문</label>
+            <textarea id="insta-f-body" placeholder="인스타 본문 내용..."></textarea>
+          </div>
+          <div class="dpanel" id="insta-dp-video">
+            <label>영상 원본 URL</label>
+            <input type="text" id="insta-f-video" placeholder="https://www.instagram.com/reel/...">
+            <div style="margin-top:10px;font-size:12px;color:var(--muted)">저장하면 링크가 표시됩니다.</div>
+            <div id="insta-video-preview" style="margin-top:12px;"></div>
+          </div>
+          <div class="dpanel" id="insta-dp-script">
+            <label>스크립트 / 자막</label>
+            <textarea id="insta-f-script" style="min-height:220px;" placeholder="[00:00] 저 이거 몰랐으면 천만원 날릴 뻔했어요&#10;[00:01] 제가 주차장에서 접촉사고가 났는데..."></textarea>
+          </div>
+          <div class="dpanel" id="insta-dp-memo">
+            <label>내 분석 메모</label>
+            <textarea id="insta-f-memo" placeholder="참고할 포인트, 훅 구조, 분석..."></textarea>
+          </div>
+          <div class="detail-actions">
+            <button class="btn btn-save" id="insta-save-btn" onclick="saveVideoDetail('insta')">💾 저장</button>
+            <button class="btn btn-ghost" onclick="goVideos('insta')">← 목록</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ YOUTUBE ════════════════════════════════ -->
+<div class="platform-panel yt-panel" id="yt-panel">
+
+  <div class="page active" id="yt-channels">
+    <div class="channel-list-page yt">
+      <div class="page-header">
+        <div class="page-title">유튜브 채널</div>
+        <button class="btn btn-yt" onclick="openAddChannel('yt')">+ 채널 추가</button>
+      </div>
+      <div class="channel-grid" id="yt-channel-grid"></div>
+    </div>
+  </div>
+
+  <div class="page" id="yt-videos">
+    <div class="video-list-page yt">
+      <div class="breadcrumb">
+        <span class="crumb" onclick="goChannels('yt')">유튜브</span>
+        <span class="sep">›</span>
+        <span class="current" id="yt-channel-name"></span>
+      </div>
+      <div class="page-header">
+        <div class="page-title" id="yt-videos-title"></div>
+        <button class="btn btn-yt" onclick="openAddVideo('yt')">+ 영상 추가</button>
+      </div>
+      <div class="video-grid" id="yt-video-grid"></div>
+    </div>
+  </div>
+
+  <div class="page" id="yt-detail">
+    <div class="video-detail-page yt-panel">
+      <div class="breadcrumb">
+        <span class="crumb" onclick="goChannels('yt')">유튜브</span>
+        <span class="sep">›</span>
+        <span class="crumb" id="yt-detail-ch-crumb" onclick="goVideos('yt')"></span>
+        <span class="sep">›</span>
+        <span class="current" id="yt-detail-num"></span>
+      </div>
+      <div class="detail-layout">
+        <div class="detail-left" id="yt-detail-left"></div>
+        <div class="detail-right">
+          <div class="dtabs">
+            <div class="dtab active" onclick="switchDtab('yt','body')">📝 본문</div>
+            <div class="dtab" onclick="switchDtab('yt','video')">🎬 원본</div>
+            <div class="dtab" onclick="switchDtab('yt','script')">📄 스크립트</div>
+            <div class="dtab" onclick="switchDtab('yt','memo')">💡 메모</div>
+          </div>
+          <div class="dpanel active" id="yt-dp-body">
+            <label>본문 / 영상 설명</label>
+            <textarea id="yt-f-body" placeholder="유튜브 영상 설명란 내용..."></textarea>
+          </div>
+          <div class="dpanel" id="yt-dp-video">
+            <label>영상 원본 URL</label>
+            <input type="text" id="yt-f-video" placeholder="https://www.youtube.com/watch?v=...">
+            <div id="yt-video-preview" style="margin-top:12px;"></div>
+          </div>
+          <div class="dpanel" id="yt-dp-script">
+            <label>스크립트 / 자막</label>
+            <textarea id="yt-f-script" style="min-height:220px;" placeholder="[00:00] 오프닝..."></textarea>
+          </div>
+          <div class="dpanel" id="yt-dp-memo">
+            <label>내 분석 메모</label>
+            <textarea id="yt-f-memo" placeholder="참고할 포인트, 훅 구조, 분석..."></textarea>
+          </div>
+          <div class="detail-actions">
+            <button class="btn btn-save" id="yt-save-btn" onclick="saveVideoDetail('yt')">💾 저장</button>
+            <button class="btn btn-ghost" onclick="goVideos('yt')">← 목록</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ MODALS ══════════════════════════════════ -->
+<div class="overlay" id="ch-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="ch-modal-title">계정 추가</h3>
+      <button class="modal-close" onclick="document.getElementById('ch-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <label>이름</label>
+        <input type="text" id="ch-name" placeholder="유어테리어">
+      </div>
+      <div>
+        <label>핸들 / URL</label>
+        <input type="text" id="ch-handle" placeholder="@your_terior">
+      </div>
+      <div>
+        <label>아이콘 이모지</label>
+        <input type="text" id="ch-emoji" placeholder="🏠" maxlength="4">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="document.getElementById('ch-modal').classList.remove('open')">취소</button>
+      <button class="btn btn-insta" id="ch-save-btn" onclick="saveChannel()">추가</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="vid-modal" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>영상 추가</h3>
+      <button class="modal-close" onclick="document.getElementById('vid-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div>
+        <label>번호 / 제목</label>
+        <input type="text" id="vid-num" placeholder="1번 영상">
+      </div>
+      <div>
+        <label>썸네일 이미지</label>
+        <div class="thumb-drop">
+          <input type="file" accept="image/*" onchange="handleThumb(event)">
+          <div id="thumb-ph">📸 클릭해서 썸네일 업로드</div>
+          <img id="thumb-prev" style="display:none;max-height:120px;border-radius:6px;margin-top:8px;width:100%;object-fit:cover;">
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="document.getElementById('vid-modal').classList.remove('open')">취소</button>
+      <button class="btn btn-insta" id="vid-save-btn" onclick="saveNewVideo()">추가</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let db = { insta: { channels: [], videos: [] }, yt: { channels: [], videos: [] } };
+function dbSave() { try { localStorage.setItem('bm_db_v2', JSON.stringify(db)); } catch(e){} }
+function dbLoad() { try { const r = localStorage.getItem('bm_db_v2'); if(r) db = JSON.parse(r); } catch(e){} }
+dbLoad();
+
+let state = { platform: 'insta', channelId: null, videoId: null, thumbData: null };
+
+function switchPlatform(p) {
+  state.platform = p;
+  document.querySelectorAll('.ptab').forEach(el => el.classList.remove('active'));
+  document.querySelector('.ptab.' + p).classList.add('active');
+  document.querySelectorAll('.platform-panel').forEach(el => el.classList.remove('active'));
+  document.getElementById(p + '-panel').classList.add('active');
+  goChannels(p);
+}
+
+function showPage(p, page) {
+  document.querySelectorAll('#' + p + '-panel .page').forEach(el => el.classList.remove('active'));
+  document.getElementById(p + '-' + page).classList.add('active');
+}
+
+function goChannels(p) {
+  state.channelId = null; state.videoId = null;
+  renderChannels(p); showPage(p, 'channels');
+}
+function goVideos(p) {
+  state.videoId = null; renderVideos(p); showPage(p, 'videos');
+}
+
+function renderChannels(p) {
+  const grid = document.getElementById(p + '-channel-grid');
+  const channels = db[p].channels;
+  if (!channels.length) {
+    grid.innerHTML = `<div class="empty"><div class="ico">${p==='insta'?'📸':'▶️'}</div><p>아직 추가된 ${p==='insta'?'계정':'채널'}이 없어요</p></div>`;
+    return;
+  }
+  grid.innerHTML = channels.map(ch => {
+    const count = db[p].videos.filter(v => v.channelId === ch.id).length;
+    return `<div class="channel-card" onclick="openChannel('${p}','${ch.id}')">
+      <div class="ch-avatar">${ch.emoji || (p==='insta'?'📸':'▶️')}</div>
+      <div class="ch-name">${esc(ch.name)}</div>
+      <div class="ch-handle">${esc(ch.handle||'')}</div>
+      <div class="ch-count">🎬 ${count}개 영상</div>
+      <button class="ch-del" onclick="deleteChannel(event,'${p}','${ch.id}')">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function openChannel(p, id) {
+  state.channelId = id;
+  const ch = db[p].channels.find(c => c.id === id);
+  document.getElementById(p + '-channel-name').textContent = ch.name;
+  document.getElementById(p + '-videos-title').textContent = ch.name;
+  goVideos(p);
+}
+
+function deleteChannel(e, p, id) {
+  e.stopPropagation();
+  if (!confirm('계정과 모든 영상을 삭제할까요?')) return;
+  db[p].channels = db[p].channels.filter(c => c.id !== id);
+  db[p].videos = db[p].videos.filter(v => v.channelId !== id);
+  dbSave(); renderChannels(p);
+}
+
+function openAddChannel(p) {
+  state.platform = p;
+  document.getElementById('ch-modal-title').textContent = p==='insta' ? '인스타 계정 추가' : '유튜브 채널 추가';
+  const btn = document.getElementById('ch-save-btn');
+  btn.className = 'btn ' + (p==='insta'?'btn-insta':'btn-yt');
+  ['ch-name','ch-handle','ch-emoji'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('ch-modal').classList.add('open');
+}
+
+function saveChannel() {
+  const p = state.platform;
+  const name = document.getElementById('ch-name').value.trim();
+  if (!name) { alert('이름을 입력해주세요'); return; }
+  db[p].channels.push({ id: Date.now().toString(), name, handle: document.getElementById('ch-handle').value.trim(), emoji: document.getElementById('ch-emoji').value.trim() });
+  dbSave(); document.getElementById('ch-modal').classList.remove('open'); renderChannels(p);
+}
+
+function renderVideos(p) {
+  const grid = document.getElementById(p + '-video-grid');
+  const videos = db[p].videos.filter(v => v.channelId === state.channelId);
+  if (!videos.length) {
+    grid.innerHTML = `<div class="empty"><div class="ico">🎬</div><p>아직 추가된 영상이 없어요</p></div>`;
+    return;
+  }
+  grid.innerHTML = videos.map(v => `
+    <div class="video-card" onclick="openVideo('${p}','${v.id}')">
+      ${v.thumb ? `<img class="video-thumb" src="${v.thumb}">` : `<div class="video-thumb-ph">${p==='yt'?'▶️':'🎬'}</div>`}
+      <div class="video-card-body">
+        ${v.num ? `<div class="video-num">${esc(v.num)}</div>` : ''}
+        <div class="video-title">${esc((v.body||'(내용 없음)').slice(0,60))}</div>
+      </div>
+      <button class="video-del" onclick="deleteVideo(event,'${p}','${v.id}')">✕</button>
+    </div>`).join('');
+}
+
+function openAddVideo(p) {
+  state.platform = p; state.thumbData = null;
+  document.getElementById('vid-num').value = '';
+  document.getElementById('thumb-prev').style.display = 'none';
+  document.getElementById('thumb-ph').style.display = 'block';
+  document.getElementById('vid-save-btn').className = 'btn ' + (p==='insta'?'btn-insta':'btn-yt');
+  document.getElementById('vid-modal').classList.add('open');
+}
+
+function handleThumb(e) {
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    state.thumbData = ev.target.result;
+    const prev = document.getElementById('thumb-prev');
+    prev.src = state.thumbData; prev.style.display = 'block';
+    document.getElementById('thumb-ph').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+}
+
+function saveNewVideo() {
+  const p = state.platform;
+  const num = document.getElementById('vid-num').value.trim();
+  if (!num) { alert('번호/제목을 입력해주세요'); return; }
+  db[p].videos.push({ id: Date.now().toString(), channelId: state.channelId, num, thumb: state.thumbData||'', body:'', video:'', script:'', memo:'' });
+  dbSave(); document.getElementById('vid-modal').classList.remove('open'); renderVideos(p);
+}
+
+function deleteVideo(e, p, id) {
+  e.stopPropagation();
+  if (!confirm('삭제할까요?')) return;
+  db[p].videos = db[p].videos.filter(v => v.id !== id);
+  dbSave(); renderVideos(p);
+}
+
+function openVideo(p, id) {
+  state.videoId = id;
+  const v = db[p].videos.find(v => v.id === id);
+  const ch = db[p].channels.find(c => c.id === state.channelId);
+  document.getElementById(p + '-detail-ch-crumb').textContent = ch ? ch.name : '';
+  document.getElementById(p + '-detail-num').textContent = v.num || '';
+  const left = document.getElementById(p + '-detail-left');
+  left.innerHTML = v.thumb ? `<img src="${v.thumb}" style="width:100%;border-radius:10px;">` : `<div class="thumb-ph">${p==='yt'?'▶️':'🎬'}</div>`;
+  document.getElementById(p+'-f-body').value = v.body||'';
+  document.getElementById(p+'-f-video').value = v.video||'';
+  document.getElementById(p+'-f-script').value = v.script||'';
+  document.getElementById(p+'-f-memo').value = v.memo||'';
+  renderVideoPreview(p, v.video||'');
+  switchDtab(p, 'body');
+  showPage(p, 'detail');
+}
+
+function renderVideoPreview(p, url) {
+  const el = document.getElementById(p + '-video-preview');
+  if (!url) { el.innerHTML = ''; return; }
+  const ytMatch = url.match(/(?:youtu\.be\/|v=)([A-Za-z0-9_-]{11})/);
+  if (ytMatch) {
+    el.innerHTML = `<iframe width="100%" style="aspect-ratio:16/9;border-radius:8px;border:none;" src="https://www.youtube.com/embed/${ytMatch[1]}" allowfullscreen></iframe>`;
+  } else {
+    el.innerHTML = `<a href="${url}" target="_blank" rel="noopener">🔗 원본 링크 열기</a>`;
+  }
+}
+
+function saveVideoDetail(p) {
+  const v = db[p].videos.find(v => v.id === state.videoId);
+  if (!v) return;
+  v.body = document.getElementById(p+'-f-body').value;
+  v.video = document.getElementById(p+'-f-video').value;
+  v.script = document.getElementById(p+'-f-script').value;
+  v.memo = document.getElementById(p+'-f-memo').value;
+  dbSave();
+  renderVideoPreview(p, v.video);
+  // 영상 목록도 갱신 (제목 업데이트 반영)
+  const btn = document.getElementById(p + '-save-btn');
+  btn.textContent = '✅ 저장됨';
+  setTimeout(() => btn.textContent = '💾 저장', 1500);
+}
+
+function switchDtab(p, name) {
+  const tabs = ['body','video','script','memo'];
+  document.querySelectorAll(`#${p}-detail .dtab`).forEach((el,i) => el.classList.toggle('active', tabs[i]===name));
+  tabs.forEach(t => { document.getElementById(p+'-dp-'+t).classList.toggle('active', t===name); });
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+renderChannels('insta');
+renderChannels('yt');
+</script>
+</body>
+</html>
